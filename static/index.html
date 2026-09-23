@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini-RAG</title>
+<link rel="stylesheet"
+href="/css/style.css">
+</head>
+<body>
+
+<div id="app">
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <h2>📚 Mini-RAG</h2>
+            <button id="btn-new-session" class="btn btn-primary">+ 新会话</button>
+        </div>
+        <ul id="session-list"></ul>
+        <hr>
+        <div id="doc-section">
+            <h3>📄 知识库</h3>
+            <label class="btn btn-small" for="file-input">上传文档</label>
+            <input type="file" id="file-input" accept=".txt,.md,.json,.csv" hidden>
+            <span id="upload-status"></span>
+            <ul id="doc-list"></ul>
+        </div>
+    </aside>
+    <main id="chat-area">
+        <div id="chat-header">
+            <span id="current-session-title">选择一个会话</span>
+        </div>
+        <div id="messages"></div>
+        <div id="input-area">
+            <textarea id="user-input" placeholder="输入问题..." rows="1"></textarea>
+            <button id="btn-send" class="btn btn-primary">发送</button>
+        </div>
+    </main>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

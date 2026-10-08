@@ -112,14 +112,17 @@ def save_docstore (docstore):
     _save_json (DOCSTORE_PATH , docstore)
 
 
-#第一次改：做去重处理（同名覆盖），防止删除同名文件时一次性把所有同名文件删除
-def add_document (filename , chunks):
-    """添加一个文档及其所有chunk。chunks 是列表，每项= {text, embedding}"""
+#第二次改：加 content_hash 做查重依据——"内容相同"由 hash 判定，"要不要覆盖"由 filename 判定
+def add_document (filename , chunks , content_hash=""):
+    """添加一个文档及其所有chunk。chunks 是列表，每项= {text, embedding}
+    content_hash 是正文的 sha256，一起落盘，后续上传靠它判断"内容是否已在库中"
+    """
     ds = get_docstore()
     doc_id = str (uuid .uuid4())[:8]
     ds ["documents"][doc_id] = {
         "filename": filename ,
         "chunk_count": len (chunks),
+        "content_hash": content_hash,
         "uploaded_at": datetime.now().isoformat(),
     }
     for i , chunk in enumerate (chunks): 
@@ -140,6 +143,52 @@ def remove_document(doc_id):
         return False
     ds["chunks"] = [c for c in ds["chunks"] if c.get("doc_id") != doc_id]
     ds["documents"].pop(doc_id, None)
+    save_docstore(ds)
+    return True
+
+def find_documents_by_hash(content_hash):
+    """按内容哈希查文档（内容查重），返回 [{"id": ..., ...}]，没有则空列表"""
+    if not content_hash:
+        return []
+    ds = get_docstore()
+    return [
+        {"id": k, **v}
+        for k, v in ds["documents"].items()
+        if v.get("content_hash") == content_hash
+    ]
+
+def find_documents_by_filename(filename):
+    """按文件名查文档（同名覆盖用），返回 [{"id": ..., ...}]"""
+    ds = get_docstore()
+    return [
+        {"id": k, **v}
+        for k, v in ds["documents"].items()
+        if v.get("filename") == filename
+    ]
+
+def remove_documents_by_filename(filename):
+    """按文件名删掉所有同名文档及其 chunk，返回被删的 doc_id 列表。
+
+    用于"同名覆盖"：先删旧版再增新版。按名字删是为了兼容历史上
+    同名重复入库过的数据（按 id 删只能删掉一条，会留下孤儿 chunk）。
+    """
+    ds = get_docstore()
+    ids = [k for k, v in ds["documents"].items() if v.get("filename") == filename]
+    if ids:
+        idset = set(ids)
+        ds["chunks"] = [c for c in ds["chunks"] if c.get("doc_id") not in idset]
+        for doc_id in ids:
+            ds["documents"].pop(doc_id, None)
+        save_docstore(ds)
+    return ids
+
+def set_document_hash(doc_id, content_hash):
+    """给单个文档补写 content_hash（老数据迁移用），成功返回 True"""
+    ds = get_docstore()
+    doc = ds["documents"].get(doc_id)
+    if not doc or not content_hash:
+        return False
+    doc["content_hash"] = content_hash
     save_docstore(ds)
     return True
 

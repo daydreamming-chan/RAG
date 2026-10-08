@@ -10,6 +10,7 @@ load_dotenv(...) ：传入了 config.py 所在目录的绝对路径，而不是�
 os.getenv(key, default) ：每个配置都有默认值， .env 不写也能跑
 DATA_DIR ：所有运行时数据（文档索引、会话记录）都存在项目内的 data/ 目录，不用外部数
 据库
+DOCUMENTS_DIR ：上传的原始文档备份目录（在 rag上传文档/ 下），和索引数据分开存放
 os.makedirs(..., exist_ok=True) ：首次启动自动创建目录
 """
 DEEPSEEK_API_KEY =os.getenv("DEEPSEEK_API_KEY", "")
@@ -21,6 +22,7 @@ CHUNK_OVERLAP =int(os.getenv("CHUNK_OVERLAP", "100"))
 RETRIEVAL_TOP_K =int(os.getenv("RETRIEVAL_TOP_K", "4"))
 
 DATA_DIR = os.path.join(os.path.dirname(__file__),"data")
-DOCUMENTS_DIR = os.path.join(DATA_DIR,"documents")
+# 原始文档备份目录：上传的源文件按原名存这里，便于随时回看/恢复原文
+DOCUMENTS_DIR = os.path.join(os.path.dirname(__file__),"rag上传文档","原始文档备份")
 
 os.makedirs(DOCUMENTS_DIR, exist_ok=True)

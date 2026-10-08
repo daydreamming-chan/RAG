@@ -6,3 +6,8 @@
 /RAG会话.md
 /修改记录.md
 /结构.txt
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+*.log

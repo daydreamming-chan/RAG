@@ -161,9 +161,24 @@ body {
   color: var(--danger);
 }
 
+/* 上传提示：独占一行，因为"跳过/覆盖"的提示文案比较长（会带库中的文件名） */
 #upload-status {
+  display: block;
+  margin-top: 6px;
   font-size: 12px;
-  margin-left: 8px;
+  line-height: 1.5;
+  color: #9aa4b2;
+  word-break: break-all;
+}
+
+/* 跳过重复上传 */
+#upload-status.is-warn {
+  color: #f0b429;
+}
+
+/* 新增 / 覆盖更新成功 */
+#upload-status.is-ok {
+  color: #4ade80;
 }
 
 #chat-area {

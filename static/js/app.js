@@ -18,6 +18,8 @@
     const docList = $("#doc-list");
     const fileInput = $("#file-input");
     const uploadStatus = $("#upload-status");
+    //上传提示的定时器：连传多个文件时清掉上一个，避免旧提示把新提示提前抹掉
+    let uploadTipTimer = null;
 
     //api请求方法
     async function api(method, path, body) {
@@ -249,14 +251,30 @@
     fileInput.addEventListener("change", async () => {
         const file = fileInput.files[0];
         if (!file) return;
+        clearTimeout(uploadTipTimer);
+        uploadStatus.classList.remove("is-warn", "is-ok");
         uploadStatus.textContent = "上传中...";
         const form = new FormData();
         form.append("file", file);
         const res = await fetch(API + "/documents/upload", { method: "POST", body: form });
         const data = await res.json();
-        uploadStatus.textContent = data.error ? "上传失败" : "上传完成";
+        // 后端会区分三种结果：新增 / 覆盖更新 / 跳过重复，直接把它的提示文案显示出来
+        uploadStatus.textContent = data.error
+            ? (data.error === "no file" ? "上传失败" : data.error)
+            : (data.message || "上传完成");
+        const isProblem = !!data.error || data.action === "skipped";
+        uploadStatus.classList.toggle("is-warn", isProblem);
+        uploadStatus.classList.toggle(
+            "is-ok",
+            !data.error && (data.action === "created" || data.action === "updated")
+        );
         fileInput.value = "";
-        setTimeout(() => { uploadStatus.textContent = ""; }, 2000);
+        // 跳过/拒收的提示更长更值得看，停留久一点
+        clearTimeout(uploadTipTimer);
+        uploadTipTimer = setTimeout(() => {
+            uploadStatus.textContent = "";
+            uploadStatus.classList.remove("is-warn", "is-ok");
+        }, isProblem ? 6000 : 3000);
         loadDocuments();
     });
 
